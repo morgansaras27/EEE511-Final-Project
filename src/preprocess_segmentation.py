@@ -6,8 +6,9 @@ from scipy import stats
 def train_test_datasets(df, percent_train):
     # Differentiate between test set and training set = 96001
     length = np.shape(df)[0]
-    df_test = df[df['user-id'] > length*percent_train]
-    df_train = df[df['user-id'] <= length*percent_train]
+    start_index = df['user-id'].iloc[0] - 1
+    df_test = df[df['user-id'] > start_index + length*percent_train]
+    df_train = df[df['user-id'] <= start_index + length*percent_train]
     print('Train-test dataset split complete.')
     
     return df_train, df_test
@@ -18,22 +19,19 @@ def normalize(dataset):
     
     mu_y = np.mean(dataset['y-axis'], axis=0)
     mu_z = np.mean(dataset['z-axis'], axis=0)
-    print('\nAverages for y-axis, z-axis = ', mu_y, mu_z)
     
     sigma_y = np.std(dataset['y-axis'], axis=0)
     sigma_z = np.std(dataset['z-axis'], axis=0)
-    print('Std. Deviations = ', sigma_y, sigma_z)
-    
+
     normalized_y = (dataset['y-axis'].to_numpy() - mu_y) / sigma_y
     normalized_z = (dataset['z-axis'].to_numpy() - mu_z) / sigma_z
     
     dataset.loc[:,('y-axis')] = normalized_y
-    print('Replaced with normalized y-values.')
     
     dataset.loc[:,('z-axis')] = normalized_z
-    print('Replaced with normalized z-values.')
     dataset.head(5)
     
+    print('Normalization complete.')
     return dataset
 
 '''CREATES SEGMENTS FROM DATASET'''
@@ -55,7 +53,7 @@ def segmentation(df, window_size, overlap):
             segments.append([y_vals, z_vals])
             labels.append(label)
     
-    print('\nSegmentation complete. ')
+    print('Segmentation complete. ')
     print('Shape of input dataset: ', np.shape(df))
     print('Shape of segmented data:', np.shape(segments))
     print('Shape of labels for segmented data: ', np.shape(labels))
@@ -80,30 +78,78 @@ def label_encode(labels):
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     
-    print('\nOnehot encoding complete. Shape of output vectors:', np.shape(onehot_encoded))
+    print('Onehot encoding complete. Shape of output vectors:', np.shape(onehot_encoded))
     
     return onehot_encoded
+
+'''SHUFFLE DATA'''
+def shuffle_data(X, Y):
+    from sklearn.utils import shuffle
+    X, Y = shuffle(X, Y)
+    return X, Y
+
+''' OVERALL FUNCTION TO PRE-PROCESS DATA '''
+# Calls all other pre-processing functions in correct order, outputs X,Y for train and test
+def preprocess(df, percent_train, window_size, overlap, subject):
+    ''' INPUTS:
+        df = compiled dataframe
+        percent_train = percentage of dataset that is used for training
+        window_size = window for segmentation
+        overlap = overlap for segments
+        subject = subject number 0 - 9 (for subjects 1 - 10) '''
+    
+    # Create data subset for given subject
+    data = df[df['user-id'] > (1200000*subject)]
+    data = data[data['user-id'] <= (1200000*(subject+1))]
+    print('Shape of subject %i data:' % (subject))
+    print(np.shape(data))
+    
+    # Normalize entire dataset
+    data = normalize(data)
+
+    # Split into test and train datasets
+    train_data, test_data = train_test_datasets(data, percent_train)
+
+    # Create segments for train and test datasets
+    X_train, Y_train = segmentation(train_data, window_size, overlap)
+    X_test, Y_test = segmentation(test_data, window_size, overlap)
+
+    # Encode labels as binary vectors for train and test datasets
+    Y_train_encoded = label_encode(Y_train)
+    Y_test_encoded = label_encode(Y_test)
+    
+    # Shuffle training data
+    X_train, Y_train_encoded = shuffle_data(X_train, Y_train_encoded)
+    
+    ''' OUTPUTS
+        X's are normalized features for given subject
+        Y's are binary vector encoded labels for gestures '''
+    
+    return X_train, Y_train_encoded, X_test, Y_test_encoded
 
 
 if __name__ == "__main__":
     '''PUTTING IT ALL TOGETHER'''
-    # Read datafile into dataframe
     f = 'Untitled Folder 1\compiled_data.csv' #compiled dataset filename
     path = '' #update with path for locating compiled datset
-    data = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
-    data.head(5)
+    df = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
+    df.head(5)
 
-    # Split into test and train datasets
-    train_data, test_data = train_test_datasets(data, 0.8)
-
-    # Normalize train dataset
-    train_data = normalize(train_data)
-
-    # Create segments
+    percent_train = 0.8
     window_size = 800
     overlap = 100
-    time_steps = window_size
-    X_train, Y_train = segmentation(train_data, window_size, overlap)
+	
+    # Initialize dictionaries for X and Y for train and test, key will be subject # 0-9, value will be the segments or labels
+    X_train = dict()
+    Y_train = dict()
+    X_test = dict()
+    Y_test = dict()
 
-    # Encode labels as binary vectors
-    Y_train_encoded = label_encode(Y_train)
+    for i in range(0, 10, 1):
+        subject = i
+        x_train, y_train, x_test, y_test = preprocess(df, percent_train, window_size, overlap, subject)
+        X_train[i] = x_train
+        Y_train[i] = y_train
+        X_test[i] = x_test
+        Y_test[i] = y_test
+        print('--------------------- SUBJECT %i COMPLETE ----------------\n\n' % subject)
