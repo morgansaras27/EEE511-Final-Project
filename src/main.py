@@ -6,15 +6,20 @@
 #by Triwiyanto Triwiyanto, Member IEEE, I Putu Alit Pawana, and Mauridhi Hery Purnomo, Senior Member IEEE
 
 
-#Imports
+#Library/Module Imports
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
 
+#Custom Code Imports
+from preprocess_segmentation import test_func
+
+
+INPUT_CHANN_COUNT = 2
+WINDOW_SIZE = 800
+OVERLAP = 100
 
 CNN_FILTER_COUNT = 200
 KERNEL_SIZE = 8
-INPUT_CHANN_COUNT = 2
-WINDOW_SIZE = 800
 STRIDE_LENGTH = 1
 DROPOUT_RATE = 0.5
 OUTPUT_CLASSES_COUNT = 10
@@ -22,10 +27,24 @@ OUTPUT_CLASSES_COUNT = 10
 def main():
 
     #----Load Data----#
-
+    # Read datafile into dataframe
+    f = 'compiled_data.csv' #compiled dataset filename
+    path = '../data/' #update with path for locating compiled datset
+    data = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
+    data.head(5)
 
     #----Data Preprocessing----#
+    # Split into test and train datasets
+    train_data, test_data = train_test_datasets(data, 0.8)
 
+    # Normalize train dataset
+    train_data = normalize(train_data)
+
+    # Create segments
+    X_train, Y_train = segmentation(train_data, WINDOW_SIZE, OVERLAP)
+
+    # Encode labels as binary vectors
+    Y_train_encoded = label_encode(Y_train)
 
     #----Create CNN----#
     EMG_CNN = Sequential(name="EMG_CNN")
@@ -46,8 +65,8 @@ def main():
     print(EMG_CNN.summary())
 
     #----Train CNN----#
-    print("Training EMG_CNN on data...NO ACTUAL DATA")
-    #history = EMG_CNN.fit()
+    print("Training EMG_CNN on data...FILENAME...[%Training Data]")
+    history = EMG_CNN.fit(X_train, Y_train_encoded)
 
     #----Run CNN----#
 

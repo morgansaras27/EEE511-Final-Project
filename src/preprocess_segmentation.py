@@ -85,24 +85,25 @@ def label_encode(labels):
     return onehot_encoded
 
 
-'''PUTTING IT ALL TOGETHER'''
-# Read datafile into dataframe
-f = 'Untitled Folder 1\compiled_data.csv' #compiled dataset filename
-path = '' #update with path for locating compiled datset
-data = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
-data.head(5)
+if __name__ == "__main__":
+    '''PUTTING IT ALL TOGETHER'''
+    # Read datafile into dataframe
+    f = 'Untitled Folder 1\compiled_data.csv' #compiled dataset filename
+    path = '' #update with path for locating compiled datset
+    data = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
+    data.head(5)
 
-# Split into test and train datasets
-train_data, test_data = train_test_datasets(data, 0.8)
+    # Split into test and train datasets
+    train_data, test_data = train_test_datasets(data, 0.8)
 
-# Normalize train dataset
-train_data = normalize(train_data)
+    # Normalize train dataset
+    train_data = normalize(train_data)
 
-# Create segments
-window_size = 800
-overlap = 100
-time_steps = window_size
-X_train, Y_train = segmentation(train_data, window_size, overlap)
+    # Create segments
+    window_size = 800
+    overlap = 100
+    time_steps = window_size
+    X_train, Y_train = segmentation(train_data, window_size, overlap)
 
-# Encode labels as binary vectors
-Y_train_encoded = label_encode(Y_train)
+    # Encode labels as binary vectors
+    Y_train_encoded = label_encode(Y_train)
