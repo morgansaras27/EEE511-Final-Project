@@ -11,9 +11,9 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
 
 #Custom Code Imports
-from preprocess_segmentation import test_func
+from preprocess_segmentation import *
 
-NUM_SUBJECTS = 10
+NUM_SUBJECTS = 1
 INPUT_CHANN_COUNT = 2
 WINDOW_SIZE = 800
 OVERLAP = 100
@@ -24,13 +24,15 @@ STRIDE_LENGTH = 1
 DROPOUT_RATE = 0.5
 OUTPUT_CLASSES_COUNT = 10
 
+PERCENT_TRAINING = 0.8
+
 def main():
 
     #----Load Data----#
     # Read datafile into dataframe
     f = 'compiled_data.csv' #compiled dataset filename
     path = '../data/' #update with path for locating compiled datset
-    data = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
+    data = pd.read_csv(str(path+f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
     data.head(5)
 
     #----Data Preprocessing----#
@@ -44,16 +46,22 @@ def main():
 
     for i in range(NUM_SUBJECTS):
         subject_index = i
-        x_train, y_train, x_test, y_test = preprocess(df, percent_train, window_size, overlap, subject_index)
+        x_train, y_train, x_test, y_test = preprocess(data, PERCENT_TRAINING, WINDOW_SIZE, OVERLAP, subject_index)
         X_train[i] = x_train
         Y_train[i] = y_train
         X_test[i] = x_test
         Y_test[i] = y_test
 
+        # print("HERE")
+        # print(X_train[i][1][1])
+        # print(Y_train[i].shape)
+        # print(X_test[i].shape)
+        # print(X_test[i].shape)
+
     #----Create CNNs----#
     for cnn_index in range(1): #Only 1 CNN is created for a single subject, currently
-        EMG_CNN = Sequential(name="EMG_CNN"+str(cnn))
-
+        EMG_CNN = Sequential(name="EMG_CNN"+str(cnn_index))
+        
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH, input_shape=(WINDOW_SIZE,INPUT_CHANN_COUNT)))  #Conv
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
         EMG_CNN.add(MaxPool1D(pool_size=8, strides=8))                                                                                         #Max Pooling
@@ -70,9 +78,9 @@ def main():
         print(EMG_CNN.summary())
 
         #----Train CNN----#
-        print("Training EMG_CNN on data...FILENAME...[%Training Data]")
-        history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index])
-
+        # print("Training EMG_CNN on data...FILENAME...[%Training Data]")
+        # history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index])
+        print(EMG_CNN.predict(np.stack(X_train[0][0]).flatten))
     #----Run CNN----#
 
 
