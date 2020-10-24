@@ -13,7 +13,7 @@ from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, GlobalAveragePooli
 #Custom Code Imports
 from preprocess_segmentation import test_func
 
-
+NUM_SUBJECTS = 10
 INPUT_CHANN_COUNT = 2
 WINDOW_SIZE = 800
 OVERLAP = 100
@@ -35,38 +35,43 @@ def main():
 
     #----Data Preprocessing----#
     # Split into test and train datasets
-    train_data, test_data = train_test_datasets(data, 0.8)
+    # Initialize dictionaries for X and Y for train and test
+    # Key will be subject # 0-NUM_SUBJECTS, value will be the segments or labels
+    X_train = dict()
+    Y_train = dict()
+    X_test = dict()
+    Y_test = dict()
 
-    # Normalize train dataset
-    train_data = normalize(train_data)
+    for i in range(NUM_SUBJECTS):
+        subject_index = i
+        x_train, y_train, x_test, y_test = preprocess(df, percent_train, window_size, overlap, subject_index)
+        X_train[i] = x_train
+        Y_train[i] = y_train
+        X_test[i] = x_test
+        Y_test[i] = y_test
 
-    # Create segments
-    X_train, Y_train = segmentation(train_data, WINDOW_SIZE, OVERLAP)
+    #----Create CNNs----#
+    for cnn_index in range(1): #Only 1 CNN is created for a single subject, currently
+        EMG_CNN = Sequential(name="EMG_CNN"+str(cnn))
 
-    # Encode labels as binary vectors
-    Y_train_encoded = label_encode(Y_train)
+        EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH, input_shape=(WINDOW_SIZE,INPUT_CHANN_COUNT)))  #Conv
+        EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
+        EMG_CNN.add(MaxPool1D(pool_size=8, strides=8))                                                                                         #Max Pooling
+        EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
+        EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
+        EMG_CNN.add(GlobalAveragePooling1D())                                                                                                  #Global Avg. Pooling
+        EMG_CNN.add(Dropout(DROPOUT_RATE))                                                                                                     #Dropout
+        EMG_CNN.add(Dense(OUTPUT_CLASSES_COUNT, activation='relu'))                                                                            #Fully Connected
 
-    #----Create CNN----#
-    EMG_CNN = Sequential(name="EMG_CNN")
+        EMG_CNN.compile(loss='categorical_crossentropy',
+                        optimizer='Adagrad', 
+                        metrics=['accuracy'])
 
-    EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH, input_shape=(WINDOW_SIZE,INPUT_CHANN_COUNT)))  #Conv
-    EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
-    EMG_CNN.add(MaxPool1D(pool_size=8, strides=8))                                                                                         #Max Pooling
-    EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
-    EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
-    EMG_CNN.add(GlobalAveragePooling1D())                                                                                                  #Global Avg. Pooling
-    EMG_CNN.add(Dropout(DROPOUT_RATE))                                                                                                     #Dropout
-    EMG_CNN.add(Dense(OUTPUT_CLASSES_COUNT, activation='relu'))                                                                            #Fully Connected
+        print(EMG_CNN.summary())
 
-    EMG_CNN.compile(loss='categorical_crossentropy',
-                    optimizer='Adagrad', 
-                    metrics=['accuracy'])
-
-    print(EMG_CNN.summary())
-
-    #----Train CNN----#
-    print("Training EMG_CNN on data...FILENAME...[%Training Data]")
-    history = EMG_CNN.fit(X_train, Y_train_encoded)
+        #----Train CNN----#
+        print("Training EMG_CNN on data...FILENAME...[%Training Data]")
+        history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index])
 
     #----Run CNN----#
 
