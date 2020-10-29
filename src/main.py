@@ -8,12 +8,12 @@
 
 #Library/Module Imports
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
+from tensorflow.keras.layers import Reshape, Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
 
 #Custom Code Imports
 from preprocess_segmentation import *
 
-NUM_SUBJECTS = 1
+NUM_SUBJECTS = 10
 INPUT_CHANN_COUNT = 2
 WINDOW_SIZE = 800
 OVERLAP = 100
@@ -52,16 +52,11 @@ def main():
         X_test[i] = x_test
         Y_test[i] = y_test
 
-        # print("HERE")
-        # print(X_train[i][1][1])
-        # print(Y_train[i].shape)
-        # print(X_test[i].shape)
-        # print(X_test[i].shape)
-
     #----Create CNNs----#
     for cnn_index in range(1): #Only 1 CNN is created for a single subject, currently
         EMG_CNN = Sequential(name="EMG_CNN"+str(cnn_index))
         
+        EMG_CNN.add(Reshape((WINDOW_SIZE, INPUT_CHANN_COUNT), input_shape=(1600,)))
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH, input_shape=(WINDOW_SIZE,INPUT_CHANN_COUNT)))  #Conv
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
         EMG_CNN.add(MaxPool1D(pool_size=8, strides=8))                                                                                         #Max Pooling
