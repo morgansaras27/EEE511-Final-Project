@@ -132,8 +132,8 @@ n=1
 if n == 1:
     '''PUTTING IT ALL TOGETHER'''
     f = 'compiled_data.csv' #compiled dataset filename
-    path = '' #update with path for locating compiled datset
-    df = pd.read_csv(str(f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
+    path = '../data/' #update with path for locating compiled datset
+    df = pd.read_csv(str(path+f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
     df.head(5)
 
     percent_train = 0.8
