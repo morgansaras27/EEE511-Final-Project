@@ -9,8 +9,8 @@ def train_test_datasets(X, Y, percent_train):
     # Differentiate between test set and training set = 96001
     length = np.shape(X)[0]
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=1-percent_train)
-    print('X_train shape (should be (1371, 800, 2)): ', np.shape(X_train))
-    print('Y_train shape (should be (1371, 10)): ', np.shape(Y_train))
+    print('X_train shape (should be (9593, 800, 2)): ', np.shape(X_train))
+    print('Y_train shape (should be (9593, 10)): ', np.shape(Y_train))
     
     return X_train, Y_train, X_test, Y_test
 
@@ -43,7 +43,7 @@ def segmentation(df, window_size, overlap):
     segments = [] #initialize empty list
     labels = [] #initialize empty list
     num_data_pts = np.shape(df)[0]
-    step = window_size - overlap
+    step = overlap
     for i in range(0, num_data_pts-window_size, step):
         y_vals = df['y-axis'].values[i: i + window_size]
         z_vals = df['z-axis'].values[i: i + window_size]
@@ -55,8 +55,8 @@ def segmentation(df, window_size, overlap):
     # Reshaping
     segments = np.asarray(segments, dtype= np.float32).reshape(-1, window_size, 2)
     labels = np.asarray(labels)
-    print('Shape of segmented dataset (should be (1714, 800, 2)):', np.shape(segments))
-    print('Shape of labels for segmented data (should be (1714,)): ', np.shape(labels))
+    print('Shape of segmented dataset (should be (11992, 800, 2)):', np.shape(segments))
+    print('Shape of labels for segmented data (should be (11992,)): ', np.shape(labels))
     
     ''' OUTPUTS:
         segments = list of individual segments from compiled dataset
