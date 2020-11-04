@@ -128,8 +128,7 @@ def preprocess(df, percent_train, window_size, overlap, subject):
 
 
 
-n=1
-if n == 1:
+if __name__ == "__main__":
     '''PUTTING IT ALL TOGETHER'''
     f = 'compiled_data.csv' #compiled dataset filename
     path = '../data/' #update with path for locating compiled datset
