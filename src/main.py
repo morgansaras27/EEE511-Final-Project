@@ -9,11 +9,13 @@
 #Library/Module Imports
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Reshape, Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adagrad
 
 #Custom Code Imports
 from preprocess_segmentation import *
 
-NUM_SUBJECTS = 10
+NUM_SUBJECTS = 1
 INPUT_CHANN_COUNT = 2
 WINDOW_SIZE = 800
 OVERLAP = 100
@@ -52,6 +54,10 @@ def main():
         X_test[i] = x_test
         Y_test[i] = y_test
 
+
+    callback = EarlyStopping(monitor='accuracy', patience=10)
+    opt = Adagrad(learning_rate=0.01)
+
     #----Create CNNs----#
     for cnn_index in range(1): #Only 1 CNN is created for a single subject, currently
         EMG_CNN = Sequential(name="EMG_CNN"+str(cnn_index))
@@ -74,10 +80,13 @@ def main():
 
         #----Train CNN----#
         # print("Training EMG_CNN on data...FILENAME...[%Training Data]")
-        # history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index])
-        print(EMG_CNN.predict(np.stack(X_train[0][0]).flatten))
-    #----Run CNN----#
-
+        # history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index],batch_size=100, epochs=100,
+        #                  callbacks = [callback])
+        
+        #----Run CNN----#
+        print(X_train[0][0].shape)
+        print(EMG_CNN.predict(X_train[0][0:1]))
+        
 
 
 if __name__ == "__main__":
