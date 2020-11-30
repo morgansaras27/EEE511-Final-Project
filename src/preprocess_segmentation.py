@@ -125,31 +125,3 @@ def preprocess(df, percent_train, window_size, overlap, subject):
 
     
     return X_train, Y_train_encoded, X_test, Y_test_encoded
-
-
-
-if __name__ == "__main__":
-    '''PUTTING IT ALL TOGETHER'''
-    f = 'compiled_data.csv' #compiled dataset filename
-    path = '../data/' #update with path for locating compiled datset
-    df = pd.read_csv(str(path+f), header = 0) #data = pd.read_csv(str(path) + '\\' + str(f), header = 0)
-    df.head(5)
-
-    percent_train = 0.8
-    window_size = 800
-    overlap = 100
-
-    # Initialize dictionaries for X and Y for train and test, key will be subject # 0-9, value will be the segments or labels
-    X_train = dict()
-    Y_train = dict()
-    X_test = dict()
-    Y_test = dict()
-
-    for i in range(0, 10, 1):
-        subject = i
-        x_train, y_train, x_test, y_test = preprocess(df, percent_train, window_size, overlap, subject)
-        X_train[i] = x_train
-        Y_train[i] = y_train
-        X_test[i] = x_test
-        Y_test[i] = y_test
-        print('--------------------- SUBJECT %i COMPLETE ----------------\n\n' % subject)
