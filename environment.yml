@@ -30,7 +30,7 @@ dependencies:
   - importlib-metadata=1.7.0=py37_0
   - intel-openmp=2020.2=254
   - joblib=0.16.0=py_0
-  - keras=2.3.1=0
+  - keras=2.4.0=0
   - keras-applications=1.0.8=py_1
   - keras-base=2.3.1=py37_0
   - keras-preprocessing=1.1.0=py_1

@@ -63,9 +63,8 @@ def main():
     opt = Adagrad(learning_rate=0.01)
 
     #----Create CNNs----#
-    for cnn_index in range(1, NUM_SUBJECTS, 1): #Only 1 CNN is created for a each subject
+    for cnn_index in range(NUM_SUBJECTS): #Only 1 CNN is created for a each subject
         EMG_CNN = Sequential(name="EMG_CNN"+str(cnn_index))
-        
         EMG_CNN.add(Reshape((WINDOW_SIZE, INPUT_CHANN_COUNT), input_shape=(1600,)))
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH, input_shape=(WINDOW_SIZE,INPUT_CHANN_COUNT)))  #Conv
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
@@ -83,50 +82,50 @@ def main():
         print(EMG_CNN.summary())
 
         #----Train CNN----#
-        print("Training EMG_CNN on data...FILENAME...[%Training Data]")
-        history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index],batch_size=100, epochs=500, callbacks = [callback], validation_split=0.2, verbose=0)
+        print("Training EMG_CNN on data...")
+        history = EMG_CNN.fit(X_train[cnn_index], Y_train[cnn_index], batch_size=100, epochs=500, callbacks = [callback], validation_split=0.2, verbose=0)
         
 	#----Visualization, Testing----#
         #Visualize training and validation curves, confusion matrix        
-    	print("\n--- Learning curve of model training ---\n")
-    	#Accuracy plot
-    	plt.figure(figsize=(6, 4))
-    	plt.plot(history.history['accuracy'], "g--", label="Accuracy of training data")
-    	plt.plot(history.history['val_accuracy'], "g", label="Accuracy of validation data")
-    	plt.title('Model Accuracy')
-    	plt.ylabel('Accuracy')
-    	plt.xlabel('Training Epoch')
-    	plt.ylim(0)
-    	plt.legend()
+        print("\n--- Learning curve of model training ---\n")
+        #Accuracy plot
+        plt.figure(figsize=(6, 4))
+        plt.plot(history.history['accuracy'], "g--", label="Accuracy of training data")
+        plt.plot(history.history['val_accuracy'], "g", label="Accuracy of validation data")
+        plt.title('Model Accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Training Epoch')
+        plt.ylim(0)
+        plt.legend()
     
-    	#Loss plot
-    	plt.figure(figsize=(6, 4))
-    	plt.plot(history.history['loss'], "r--", label="Loss of training data")
-    	plt.plot(history.history['val_loss'], "r", label="Loss of validation data")
-    	plt.title('Model Loss')
-    	plt.ylabel('Loss')
-    	plt.xlabel('Training Epoch')
-    	plt.ylim(0)
-    	plt.legend()
-    	plt.show()
+        #Loss plot
+        plt.figure(figsize=(6, 4))
+        plt.plot(history.history['loss'], "r--", label="Loss of training data")
+        plt.plot(history.history['val_loss'], "r", label="Loss of validation data")
+        plt.title('Model Loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Training Epoch')
+        plt.ylim(0)
+        plt.legend()
+        plt.show()
 
-    	#Evaluate the accuracy and loss value on test data
-    	print("\n--- Check against test data ---\n")
-    	score = EMG_CNN.evaluate(X_test[cnn_index], Y_test[cnn_index], verbose=1)
-    	print("\nAccuracy on test data: %0.2f" % score[1])
-    	print("\nLoss on test data: %0.2f" % score[0])
+        #Evaluate the accuracy and loss value on test data
+        print("\n--- Check against test data ---\n")
+        score = EMG_CNN.evaluate(X_test[cnn_index], Y_test[cnn_index], verbose=1)
+        print("\nAccuracy on test data: %0.2f" % score[1])
+        print("\nLoss on test data: %0.2f" % score[0])
 
-    	#Display the confusion matrix for test data
-    	print("\n--- Confusion matrix for test data ---\n")
-    	y_pred_test = EMG_CNN.predict(X_test[cnn_index])
-    	# Take the class with the highest probability from the test predictions
-    	max_y_pred_test = np.argmax(y_pred_test, axis=1)
-    	max_y_test = np.argmax(Y_test[cnn_index], axis=1)
-    	show_confusion_matrix(max_y_test, max_y_pred_test)
+        #Display the confusion matrix for test data
+        print("\n--- Confusion matrix for test data ---\n")
+        y_pred_test = EMG_CNN.predict(X_test[cnn_index])
+        # Take the class with the highest probability from the test predictions
+        max_y_pred_test = np.argmax(y_pred_test, axis=1)
+        max_y_test = np.argmax(Y_test[cnn_index], axis=1)
+        show_confusion_matrix(max_y_test, max_y_pred_test)
  
-    	#Display classification report (which includes F1, precision, recall) for the test data
-    	print("\n--- Classification report for test data ---\n")
-    	print(classification_report(max_y_test, max_y_pred_test))
+        #Display classification report (which includes F1, precision, recall) for the test data
+        print("\n--- Classification report for test data ---\n")
+        print(classification_report(max_y_test, max_y_pred_test))
         
 
 
