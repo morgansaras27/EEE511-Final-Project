@@ -11,28 +11,56 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Reshape, Dense, Conv1D, MaxPool1D, GlobalAveragePooling1D, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adagrad
+from tensorflow import keras
+import matplotlib.pyplot as plt
+from sklearn import metrics
+from sklearn.metrics import classification_report
+from sklearn import preprocessing
+import seaborn as sns
 
 #Custom Code Imports
 from preprocess_segmentation import *
 
-#Initiation of variables for inputs
-NUM_SUBJECTS = 10 #Note: this value will need to be changed if not run on the publicly available dataset
-INPUT_CHANN_COUNT = 2
-WINDOW_SIZE = 800
-OVERLAP = 100
 
-#Initiation of variables for CNN Architecture
-CNN_FILTER_COUNT = 200
-KERNEL_SIZE = 8
-STRIDE_LENGTH = 1
-DROPOUT_RATE = 0.5
-OUTPUT_CLASSES_COUNT = 10
+#Variables for input data
+NUM_SUBJECTS = 10 # number of subjects being analyzed -- CHANGE BASED ON DATASET BEING USED
+INPUT_CHANN_COUNT = 2 #number of input channels (always 2)
+WINDOW_SIZE = 800 #window size used in segmentation, defines input size for CNN (always 800)
+OVERLAP = 100 #overlap between windows used in segmentation (always 100)
 
-#Initiation of variables for train,test split
-PERCENT_TRAINING = 0.8
+#Variables for CNN architecture
+CNN_FILTER_COUNT = 200 #number of filters used in convolutional layers (always 200)
+KERNEL_SIZE = 8 #kernel / filter size of 8x8 (always 8)
+STRIDE_LENGTH = 1 #stride for kernel application in convolutional layers (always 1)
+DROPOUT_RATE = 0.5 #percentage of dropout in Dropout layer (always 0.5)
+OUTPUT_CLASSES_COUNT = 10 #number of different target (gesture) classes (always 10)
+
+#Variable for training, testing dataset split
+PERCENT_TRAINING = 0.8 #Percentage of data that is used for training = 80% (always 0.8)
+
+#Set names for targets (gesture labels)
+LABELS = ["CLO","IND","LIT","MID","RIN","THI","THL","THM","THR","THU"]
+
+#Define function for creating confusion matrix visualization
+def show_confusion_matrix(validations, predictions):
+    matrix = metrics.confusion_matrix(validations, predictions)
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(matrix,
+                cmap="coolwarm",
+                linecolor='white',
+                linewidths=1,
+                xticklabels=LABELS,
+                yticklabels=LABELS,
+                annot=True,
+                fmt="d")
+    plt.title("Confusion Matrix")
+    plt.ylabel("True Label")
+    plt.xlabel("Predicted Label")
+    plt.show()
 
 
 def main():
+
     #----Load Data----#
     # Read datafile into dataframe
     #USER NEEDS TO UPDATE THE FILENAME AND PATH/LOCATION IF DIFFERENT 
@@ -59,7 +87,7 @@ def main():
         Y_test[i] = y_test
 
 
-    callback = EarlyStopping(monitor='accuracy', patience=10)
+    callback = keras.callbacks.EarlyStopping(monitor='accuracy', patience=10)
     opt = Adagrad(learning_rate=0.01)
 
     #----Create CNNs----#
@@ -73,10 +101,11 @@ def main():
         EMG_CNN.add(Conv1D(filters=CNN_FILTER_COUNT, kernel_size=KERNEL_SIZE, activation='relu', strides=STRIDE_LENGTH))                       #Conv
         EMG_CNN.add(GlobalAveragePooling1D())                                                                                                  #Global Avg. Pooling
         EMG_CNN.add(Dropout(DROPOUT_RATE))                                                                                                     #Dropout
-        EMG_CNN.add(Dense(OUTPUT_CLASSES_COUNT, activation='relu'))                                                                            #Fully Connected
+        EMG_CNN.add(Dense(OUTPUT_CLASSES_COUNT, activation='softmax'))                                                                            #Fully Connected
+                                                                               #Fully Connected
 
         EMG_CNN.compile(loss='categorical_crossentropy',
-                        optimizer='Adagrad', 
+                        optimizer=opt, 
                         metrics=['accuracy'])
 
         print(EMG_CNN.summary())

@@ -36,6 +36,7 @@ dependencies:
   - keras-preprocessing=1.1.0=py_1
   - libprotobuf=3.13.0=h200bbdf_0
   - markdown=3.2.2=py37_0
+  - matplotlib=3.3.3
   - mkl=2020.2=256
   - mkl-service=2.3.0=py37hb782905_0
   - mkl_fft=1.2.0=py37h45dec08_0
@@ -65,6 +66,7 @@ dependencies:
   - rsa=4.6=py_0
   - scikit-learn=0.23.2=py37h47e9c7a_0
   - scipy=1.5.2=py37h9439919_0
+  - seaborn=0.11.0
   - setuptools=49.6.0=py37_1
   - six=1.15.0=py_0
   - sqlite=3.33.0=h2a8f88b_0
